@@ -134,6 +134,16 @@ public class RoomControl {
             // Useful methods:
             //    registration.getEndpoint()
             //    observation.getPath()
+            LwM2mPath observationPath = observation.getPath();
+
+            // 2IMN15: Check if this observe comes from the PresenceDetector object
+            if (observationPath.getObjectId()   == Constants.PRESENCE_DETECTOR_ID &&
+                observationPath.getResourceId() == Constants.RES_PRESENCE) {
+                // 2IMN15: Grab the presence value from the request
+                boolean presence = (boolean) ((LwM2mResource) response.getContent()).getValue();
+                // 2IMN15: Inform about the new presence value
+                System.out.println("Presence update: " + presence);
+            }
 
 
             // For processing an update of the Demand Response object.
@@ -160,10 +170,10 @@ public class RoomControl {
                     new ObserveRequest(Constants.DEMAND_RESPONSE_ID,
                             0,
                             Constants.RES_TOTAL_BUDGET);
-            System.out.println(">>ObserveRequest created << ");
+            System.out.println(">> ObserveRequest created << ");
             ObserveResponse coResponse =
                     lwServer.send(registration, obRequest, 1000);
-            System.out.println(">>ObserveRequest sent << ");
+            System.out.println(">> ObserveRequest sent << ");
             if (coResponse == null) {
                 System.out.println(">>ObserveRequest null << ");
             }
