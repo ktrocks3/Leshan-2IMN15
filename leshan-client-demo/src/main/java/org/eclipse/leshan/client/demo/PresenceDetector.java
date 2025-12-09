@@ -27,11 +27,7 @@ import org.eclipse.leshan.core.util.NamedThreadFactory;
 //
 // Some classes for creating a GUI.
 //
-import javax.swing.JLabel;
-import javax.swing.JTextField;
-import javax.swing.JFrame;
-import javax.swing.JComboBox;
-import javax.swing.WindowConstants;
+import javax.swing.*;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.Container;
@@ -44,85 +40,91 @@ public class PresenceDetector extends BaseInstanceEnabler {
     // Static values for resource items
     private static final int RES_POWER = 30000;
     private static final int RES_PRESENCE = 30001;
-    private static final List<Integer> supportedResources =
-     Arrays.asList(
-             RES_POWER
-           , RES_PRESENCE
-           );
-    // Variables storing current values.
+    private static final List<Integer> supportedResources = Arrays.asList(RES_POWER, RES_PRESENCE);
 
+    // Variables storing current values.
     private boolean vPower = false;
     private boolean vPresence = false;
 
-    //
-    // 2IMN15:  TODO  :  fill in
-    //
-    // Add state variables for interaction with the user (GUI, CLI, sensor.)
-    
-    
+    // 2IMN15: GUI components that allow the user to toggle presence
+    private JFrame guiFrame;
+    private JCheckBox presenceCheckbox;
+    private JLabel presenceLabel;
+
     public PresenceDetector() {
-	//
-	// 2IMN15:  TODO  :  fill in
-	//
-	// Create an interface to enable presence detection
-	// Options:
-	// *  GUI     (see DemandResponse.java for an Swing/AWT example)
-	// *  external application
-	// *  ...
-	//
-	// Call "setPresence(bool)" to inform observers.
+        // 2IMN15: Create simple GUI with a checkbox to simulate presence detection
+        guiFrame = new JFrame();
+        guiFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        guiFrame.setTitle("Presence Detection");
+        presenceLabel = new JLabel();
+        presenceLabel.setText("Presence Detection");
+
+        presenceCheckbox = new JCheckBox();
+        presenceCheckbox.setSelected(vPresence);
+        // 2IMN15: When the checkbox is toggled, update the presence resource and notify observers
+        presenceCheckbox.addActionListener(e -> setPresence(presenceCheckbox.isSelected()));
+
+        // Create layout of labels, inputs and values.
+        GridLayout layout = new GridLayout(0, 2, 10, 10);
+        guiFrame.getContentPane().setLayout(layout);
+        Container guiPane = guiFrame.getContentPane();
+        guiPane.add(presenceLabel);
+        guiPane.add(presenceCheckbox);
+        guiFrame.pack();
+        // Code to make the frame visible. Copied from DemandResponse, used lambda as suggested by intellij.
+        java.awt.EventQueue.invokeLater(() -> guiFrame.setVisible(true));
     }
 
     @Override
     public synchronized ReadResponse read(ServerIdentity identity, int resourceId) {
-	switch (resourceId) {
-	case RES_POWER:
-	    return ReadResponse.success(resourceId, vPower);
-	case RES_PRESENCE:
-	    return ReadResponse.success(resourceId, vPresence);
-	default:
-	    return super.read(identity, resourceId);
-	}
+        switch (resourceId) {
+            case RES_POWER:
+                return ReadResponse.success(resourceId, vPower);
+            case RES_PRESENCE:
+                return ReadResponse.success(resourceId, vPresence);
+            default:
+                return super.read(identity, resourceId);
+        }
     }
-    
+
     @Override
     public WriteResponse write(ServerIdentity identity, boolean replace, int resourceId, LwM2mResource value) {
-	switch (resourceId) {
-	case RES_POWER:
-	    // vPower = (Boolean) value.getValue();
-	    // fireResourceChange(resourceId);
-	    setPower((Boolean) value.getValue());
-	    return WriteResponse.success();
-	default:
-	    return super.write(identity, replace, resourceId,value);
-	}
+        switch (resourceId) {
+            case RES_POWER:
+                // vPower = (Boolean) value.getValue();
+                // fireResourceChange(resourceId);
+                setPower((Boolean) value.getValue());
+                return WriteResponse.success();
+            default:
+                return super.write(identity, replace, resourceId, value);
+        }
     }
 
     @Override
     public synchronized ExecuteResponse execute(ServerIdentity identity, int resourceId, Arguments arguments) {
-	switch (resourceId) {
-	default:
-	    return super.execute(identity, resourceId,arguments);
-	}
+        switch (resourceId) {
+            default:
+                return super.execute(identity, resourceId, arguments);
+        }
     }
-    
+
     @Override
     public List<Integer> getAvailableResourceIds(ObjectModel model) {
-	return supportedResources;
+        return supportedResources;
     }
 
     private synchronized void setPower(boolean value) {
-	if (vPower != value) {
-	    vPower = value;
-	    fireResourceChange(RES_POWER);
-	}
+        if (vPower != value) {
+            vPower = value;
+            fireResourceChange(RES_POWER);
+        }
     }
-    
+
     private synchronized void setPresence(boolean value) {
-	if (vPresence != value) {
-	    vPresence = value;
-	    fireResourceChange(RES_PRESENCE);
-	}
+        if (vPresence != value) {
+            vPresence = value;
+            fireResourceChange(RES_PRESENCE);
+        }
     }
-    
+
 }
