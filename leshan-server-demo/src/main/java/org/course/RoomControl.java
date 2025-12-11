@@ -141,11 +141,21 @@ public class RoomControl {
 
 
     public static void handleDeregistration(Registration registration) {
-        //
-        // 2IMN15:  TODO  :  fill in
-        //
-        // The device identified by the given registration will
-        // disappear.  Update the state accordingly.
+        // 2IMN15:  This also has a sequence diagram we can look at
+        // The device identified by the given registration will disappear.  Update the state accordingly.
+        // 			Luminaire -> Room control (Deregister ep=IoT-Pi43)
+        // 			Room control -> Room control (Subtract peak power map (ep) from maximum room peak power)
+        // 			Room control -> Room control (Remove peak power map (ep))
+        // 			HalogenLuminaire -> Room control (Deregister ep=IoT-Pi44)
+        // 			Room control -> Room control (Subtract peak power map (ep) from maximum room peak power)
+        // 			Room control -> Room control (Remove peak power map (ep))
+
+        // If the peak power map has the key then it's either a luminere or a haloge luminere so we can safely remove it
+        if (peakPowerMap.containsKey(registration.getEndpoint())) {
+            maximumPeakRoomPower -= peakPowerMap.get(registration.getEndpoint());
+            peakPowerMap.remove(registration.getEndpoint());
+        }
+
     }
 
     public static void handleObserveResponse(SingleObservation observation,
