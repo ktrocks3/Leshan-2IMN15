@@ -25,11 +25,7 @@ import org.eclipse.leshan.core.response.WriteResponse;
 import org.eclipse.leshan.core.util.NamedThreadFactory;
 
 
-import javax.swing.JLabel;
-import javax.swing.JTextField;
-import javax.swing.JFrame;
-import javax.swing.JComboBox;
-import javax.swing.WindowConstants;
+import javax.swing.*;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.Container;
@@ -44,13 +40,7 @@ public class Luminaire extends BaseInstanceEnabler {
     private static final int RES_TYPE = 30002;
     private static final int RES_PEAK_POWER = 30003;
     private static final int RES_DIM_LEVEL = 30004;
-    private static final List<Integer> supportedResources =
-     Arrays.asList(
-             RES_POWER
-           , RES_TYPE
-           , RES_PEAK_POWER
-           , RES_DIM_LEVEL
-           );
+    private static final List<Integer> supportedResources = Arrays.asList(RES_POWER, RES_TYPE, RES_PEAK_POWER, RES_DIM_LEVEL);
     // Variables storing current values.
 
     private boolean vPower = false;
@@ -63,113 +53,124 @@ public class Luminaire extends BaseInstanceEnabler {
     // 0..100
     private long vDimLevel = 0;
 
-    //
-    // 2IMN15:  TODO  :  fill in
-    //
-    // Add state variables for the user interface.
-    
+    // 2IMN15: GUI components that allow the user to view luminaire information
+    private JFrame guiFrame;
+    private JLabel dimLabel;
+    private JLabel powerLabel;
+    private JLabel peakPowerLabel;
+
     public Luminaire() {
-	//
-	// 2IMN15:  TODO  :  fill in
-	//
-	// Create an interface to display the luminaire state.
-	// Options:
-	// *  GUI     (see DemandResponse.java for an Swing/AWT example)
-	// *  external application
-	// *  ...
-	//
+        // 2IMN15:  Create simple GUI with text labels to display current luminaire state
+        guiFrame = new JFrame();
+        guiFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        guiFrame.setTitle("Luminaire");
+        guiFrame.setLayout(new GridLayout(0, 1, 5, 5));
+
+        dimLabel = new JLabel();
+        dimLabel.setText("Dim: " + vDimLevel);
+
+        powerLabel = new JLabel();
+        powerLabel.setText("Power: " + vPower);
+
+        peakPowerLabel = new JLabel();
+        peakPowerLabel.setText("Peak Power: " + String.format("%02d", vPeakPower) + " watts");
+
+        guiFrame.add(dimLabel);
+        guiFrame.add(powerLabel);
+        guiFrame.add(peakPowerLabel);
+        guiFrame.pack();
+        java.awt.EventQueue.invokeLater(()->guiFrame.setVisible(true));
 
     }
 
     @Override
     public synchronized ReadResponse read(ServerIdentity identity, int resourceId) {
-	switch (resourceId) {
-	case RES_POWER:
-	    return ReadResponse.success(resourceId, vPower);
-	case RES_TYPE:
-	    return ReadResponse.success(resourceId, vType);
-	case RES_PEAK_POWER:
-	    return ReadResponse.success(resourceId, vPeakPower);
-	case RES_DIM_LEVEL:
-	    return ReadResponse.success(resourceId, vDimLevel);
-	default:
-	    return super.read(identity, resourceId);
-	}
+        switch (resourceId) {
+            case RES_POWER:
+                return ReadResponse.success(resourceId, vPower);
+            case RES_TYPE:
+                return ReadResponse.success(resourceId, vType);
+            case RES_PEAK_POWER:
+                return ReadResponse.success(resourceId, vPeakPower);
+            case RES_DIM_LEVEL:
+                return ReadResponse.success(resourceId, vDimLevel);
+            default:
+                return super.read(identity, resourceId);
+        }
     }
-    
+
     @Override
     public WriteResponse write(ServerIdentity identity, boolean replace, int resourceId, LwM2mResource value) {
-	switch (resourceId) {
-	case RES_POWER:
-	    // vPower = (Boolean) value.getValue();
-	    // fireResourceChange(resourceId);
-	    setPower((Boolean) value.getValue());
-	    return WriteResponse.success();
-	case RES_DIM_LEVEL:
-	    // vDimLevel = (Integer) value.getValue();
-	    // fireResourceChange(resourceId);
-	    setDimLevel((Long) value.getValue());
-	    return WriteResponse.success();
-	default:
-	    return super.write(identity, replace, resourceId,value);
-	}
+        switch (resourceId) {
+            case RES_POWER:
+                // vPower = (Boolean) value.getValue();
+                // fireResourceChange(resourceId);
+                setPower((Boolean) value.getValue());
+                return WriteResponse.success();
+            case RES_DIM_LEVEL:
+                // vDimLevel = (Integer) value.getValue();
+                // fireResourceChange(resourceId);
+                setDimLevel((Long) value.getValue());
+                return WriteResponse.success();
+            default:
+                return super.write(identity, replace, resourceId, value);
+        }
     }
-    
+
     @Override
     public synchronized ExecuteResponse execute(ServerIdentity identity, int resourceId, Arguments arguments) {
-	switch (resourceId) {
-	default:
-	    return super.execute(identity, resourceId,arguments);
-	}
+        switch (resourceId) {
+            default:
+                return super.execute(identity, resourceId, arguments);
+        }
     }
-    
+
     @Override
     public List<Integer> getAvailableResourceIds(ObjectModel model) {
-	return supportedResources;
+        return supportedResources;
     }
-    
+
     // Configure before registration, don't fire.
     public void configure(String lumtype, long peakpower) {
-	vType = lumtype;
-	vPeakPower = peakpower;
+        vType = lumtype;
+        vPeakPower = peakpower;
+
+        // 2IMN15: When the peak power has been updated we should update the label in the UI
+        peakPowerLabel.setText("Peak Power: " + String.format("%02d", vPeakPower) + " watts");
     }
-    
+
     private synchronized void setPower(boolean value) {
-	if (vPower != value) {
-	    vPower = value;
-	    //
-	    // 2IMN15:  TODO  :  fill in
-	    //
-	    // RoomControl has change the power.
-	    // Update the UI.
-	    fireResourceChange(RES_POWER);
-	}
+        if (vPower != value) {
+            vPower = value;
+            // 2IMN15:  When the vPower has been updated, we should update the label from the GUI
+            powerLabel.setText("Power: " + value);
+            fireResourceChange(RES_POWER);
+        }
     }
-    
+
     private synchronized void setType(String value) {
-	if (vType != value) {
-	    vType = value;
-	    fireResourceChange(RES_TYPE);
-	}
+        if (vType != value) {
+            vType = value;
+            fireResourceChange(RES_TYPE);
+        }
     }
 
     private synchronized void setPeakPower(long value) {
-	if (vPeakPower != value) {
-	    vPeakPower = value;
-	    fireResourceChange(RES_PEAK_POWER);
-	}
+        if (vPeakPower != value) {
+            vPeakPower = value;
+            // 2IMN15: When the peak power has been updated we should update the label in the UI
+            peakPowerLabel.setText("Peak Power: " + value  + " watts");
+            fireResourceChange(RES_PEAK_POWER);
+        }
     }
 
     private synchronized void setDimLevel(long value) {
-	if (vDimLevel != value) {
-	    vDimLevel = value;
-	    //
-	    // 2IMN15:  TODO  :  fill in
-	    //
-	    // RoomControl has change the dim level.
-	    // Update the UI.
-	    fireResourceChange(RES_DIM_LEVEL);
-	}
+        if (vDimLevel != value) {
+            vDimLevel = value;
+            // 2IMN15:  When the dim value has been updated we should update the label in the UI
+            dimLabel.setText("Dim: " + value);
+            fireResourceChange(RES_DIM_LEVEL);
+        }
     }
 
 }
